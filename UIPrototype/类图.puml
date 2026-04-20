@@ -1,0 +1,112 @@
+@startuml
+!theme plain
+' 设置布局方向，让图更清晰
+left to right direction
+' 隐藏空的属性/方法区域
+hide empty members
+' 设置箭头样式
+skinparam linetype ortho
+
+' ==================== 抽象基类定义 ====================
+abstract class BaseDetectionPlugin {
+    # ruleManager: RuleManager
+    # configManager: PluginConfigManager
+    # pluginId: String
+    # pluginName: String
+    + {abstract} detect(context: BanditContext): BanditIssue
+    + initPlugin(): void
+    # filterFalsePositive(matchedNode: ASTNode): Boolean
+}
+
+' ==================== 核心业务实现类定义 ====================
+class HardcodedCredentialDetector {
+    - SENSITIVE_PATTERN: Regex
+    - FALSE_POSITIVE_EXCLUDE: Regex
+    + detect(context: BanditContext): BanditIssue
+    - matchSensitiveAssignment(node: ASTNode): Boolean
+    - matchSensitiveDict(node: ASTNode): Boolean
+}
+
+class CryptoComplianceDetector {
+    - FORBIDDEN_HASH_ALGOS: Set<String>
+    - FORBIDDEN_CRYPTO_ALGOS: Set<String>
+    - FORBIDDEN_CRYPTO_MODES: Set<String>
+    - MIN_RSA_KEY_LENGTH: Int
+    + detect(context: BanditContext): BanditIssue
+    - matchInsecureHash(node: ASTNode): Boolean
+    - matchInsecureCrypto(node: ASTNode): Boolean
+    - matchInsufficientKeyLength(node: ASTNode): Boolean
+}
+
+' ==================== 实体类定义 ====================
+class DetectionRule {
+    + ruleId: String
+    + ruleName: String
+    + matchPattern: Regex/String
+    + targetASTNode: List<String>
+    + severity: Enum
+    + confidence: Enum
+    + riskDescription: String
+    + fixSuggestion: String
+    + cweId: Int
+    + isEnabled: Boolean
+    + validateRule(): Boolean
+    + enableRule(): void
+    + disableRule(): void
+}
+
+' ==================== 支撑类定义 ====================
+class RuleManager {
+    - ruleList: List<DetectionRule>
+    - enabledRuleMap: Map<String, DetectionRule>
+    + loadDefaultRules(): void
+    + addRule(rule: DetectionRule): void
+    + removeRule(ruleId: String): void
+    + getEnabledRules(): List<DetectionRule>
+    + getRuleById(ruleId: String): DetectionRule
+}
+
+class PluginConfigManager {
+    - configMap: Map<String, Any>
+    - DEFAULT_CONFIG: Map<String, Any>
+    + loadBanditNativeConfig(context: BanditContext): void
+    + loadCustomConfig(configPath: String): void
+    + getConfigValue(key: String, defaultValue: Any): Any
+    + setConfigValue(key: String, value: Any): void
+}
+
+' ==================== Bandit原生外部类定义（仅作依赖展示） ====================
+class BanditContext <<Bandit原生>> {
+    + node: ASTNode
+    + file: String
+    + lineno: Int
+    + config: BanditConfig
+}
+
+class BanditIssue <<Bandit原生>> {
+    + severity: Enum
+    + confidence: Enum
+    + text: String
+    + lineno: Int
+    + testId: String
+}
+
+' ==================== 类关系定义 ====================
+' 1. 泛化（继承）关系：实现类继承抽象基类
+HardcodedCredentialDetector --|> BaseDetectionPlugin
+CryptoComplianceDetector --|> BaseDetectionPlugin
+
+' 2. 聚合关系：规则管理器包含多个规则实体
+RuleManager o-- DetectionRule
+
+' 3. 关联关系：检测插件持有规则管理器和配置管理器
+BaseDetectionPlugin --> RuleManager
+BaseDetectionPlugin --> PluginConfigManager
+
+' 4. 依赖关系：检测逻辑依赖Bandit原生上下文和Issue对象
+HardcodedCredentialDetector ..> BanditContext
+HardcodedCredentialDetector ..> BanditIssue
+CryptoComplianceDetector ..> BanditContext
+CryptoComplianceDetector ..> BanditIssue
+
+@enduml

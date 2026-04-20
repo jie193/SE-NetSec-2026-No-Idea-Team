@@ -1,0 +1,57 @@
+@startuml
+' 强制全局从左到右布局，确保人物固定在画布最左侧
+left to right direction
+
+' 美化样式：简约专业风格，适配PaintUML完美渲染
+skinparam usecase {
+    BackgroundColor #f0f7ff
+    BorderColor #2563eb
+    RoundCorner 6
+    FontName 微软雅黑
+}
+skinparam actor {
+    BackgroundColor #dbeafe
+    BorderColor #1d4ed8
+    RoundCorner 6
+    FontName 微软雅黑
+}
+skinparam rectangle {
+    BackgroundColor #ffffff
+    BorderColor #64748b
+    RoundCorner 12
+    LineWidth 1.2
+    FontName 微软雅黑
+}
+skinparam arrow {
+    LineWidth 1.1
+    Color #334155
+}
+
+' 【优先定义确保左置】统一单一参与者，固定在最左侧
+actor "用户" as User
+
+' 系统边界与用例全部位于人物右侧
+rectangle "Python代码安全扫描插件（基于Bandit）" {
+    ' 核心用例，按用户操作链路顺排
+    usecase "插件加载与初始化" as UC01
+    usecase "执行代码安全扫描" as UC02
+    usecase "硬编码敏感信息检测" as UC0201
+    usecase "加密算法合规性检测" as UC0202
+    usecase "查看扫描结果与修复建议" as UC03
+    usecase "导出多格式扫描报告" as UC04
+    usecase "自定义扫描规则与配置" as UC05
+}
+
+' UML标准关系定义
+' 包含关系：核心扫描内置两大核心检测能力
+UC02 *-- UC0201
+UC02 *-- UC0202
+
+' 箭头统一从左侧人物指向右侧用例，符合阅读习惯
+User --> UC01
+User --> UC02
+User --> UC03
+User --> UC04
+User --> UC05
+
+@enduml
