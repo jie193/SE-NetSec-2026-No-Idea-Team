@@ -80,9 +80,7 @@
 
 \- 提供了 `.editorconfig` 配置示例
 
-\- 提供了 `pyproject.toml` 配置示例
-
-\- 提供了 VS Code 配置示例
+\- 提供了环境配置示例
 
  
 
