@@ -1,0 +1,13 @@
+@startuml 部署图
+actor "开发者/运维人员" as User
+node "本地开发环境" {
+    [Bandit CLI 核心引擎] as Bandit
+    [bandit-sensitive-data-plugin 敏感信息检测插件] as Plugin
+}
+database "待扫描Python代码仓库" as Code
+
+' 核心部署调用链路
+User --> Bandit : 执行Bandit扫描命令
+Bandit --> Plugin : 加载并调用插件检测规则
+Plugin --> Code : 读取并扫描目标代码
+@enduml

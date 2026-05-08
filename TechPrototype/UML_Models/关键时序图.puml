@@ -1,0 +1,47 @@
+@startuml
+
+' 参与者定义
+actor "用户" as User
+participant "Bandit引擎" as Bandit
+participant "检测规则" as Detector
+participant "AST解析器" as Parser
+participant "结果收集器" as Collector
+
+' 样式设置
+skinparam sequenceMessageAlign center
+skinparam noteFontSize 12
+
+title 漏洞扫描时序图
+
+' 时序流程
+User -> Bandit : bandit -r code.py
+activate Bandit
+note right of Bandit : 启动扫描，解析参数
+
+Bandit -> Detector : 加载检测规则
+activate Detector
+Detector --> Bandit : 规则注册完成
+deactivate Detector
+
+Bandit -> Parser : 解析目标文件
+activate Parser
+Parser --> Bandit : 返回AST树
+deactivate Parser
+
+loop 遍历AST节点
+    Bandit -> Detector : 触发检测规则
+    activate Detector
+    
+    Detector --> Bandit : 返回Issue对象
+    deactivate Detector
+    
+    Bandit -> Collector : 收集Issue
+end
+
+Bandit -> Collector : 生成报告
+Collector --> Bandit : 格式化结果
+
+Bandit --> User : 输出扫描结果
+deactivate Bandit
+
+@enduml

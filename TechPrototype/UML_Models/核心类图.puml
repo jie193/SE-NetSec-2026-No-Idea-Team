@@ -1,0 +1,65 @@
+@startuml
+' 核心类图
+
+package "sensitive_data_plugin" {
+  
+  class BaseDetector {
+    - rule_id: str
+    - severity: str
+    - confidence: str
+    - description: str
+    + create_issue(context: BanditContext): Issue
+    + get_rule_info(): dict
+    + is_ignored(node: ASTNode): bool
+  }
+  
+  class HardcodedDetector {
+    - sensitive_keywords: list
+    - min_key_length: int
+    + detect_variable_assignment(node: ASTNode): Issue
+    + detect_dict_value(node: ASTNode): Issue
+    + detect_func_argument(node: ASTNode): Issue
+  }
+  
+  class CryptoDetector {
+    - weak_hashes: list
+    - weak_ciphers: list
+    - weak_modes: list
+    - min_key_sizes: dict
+    + detect_weak_hash(context: BanditContext): Issue
+    + detect_weak_cipher(context: BanditContext): Issue
+    + detect_unsafe_mode(context: BanditContext): Issue
+    + detect_weak_key(context: BanditContext): Issue
+  }
+  
+  class FalsePositiveFilter {
+    - common_constants: list
+    - min_length: int
+    + is_nosec_line(line: str): bool
+    + is_common_constant(value: str): bool
+    + is_short_string(value: str): bool
+    + should_ignore(context: BanditContext): bool
+  }
+  
+  class Issue {
+    - test_id: str
+    - severity: str
+    - confidence: str
+    - text: str
+    - lineno: int
+    - cwe: int
+  }
+
+  ' 规范的类关系
+  HardcodedDetector --|> BaseDetector : 继承
+  CryptoDetector --|> BaseDetector : 继承
+  
+  HardcodedDetector ..> FalsePositiveFilter : 使用
+  CryptoDetector ..> FalsePositiveFilter : 使用
+  
+  BaseDetector --> Issue : 生成
+  HardcodedDetector --> Issue : 生成
+  CryptoDetector --> Issue : 生成
+}
+
+@enduml
